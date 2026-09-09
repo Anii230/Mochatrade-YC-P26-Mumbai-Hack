@@ -38,32 +38,21 @@ MarginGuard provides a client-authorized, non-custodial risk engine that brings 
 
 ## System Architecture
 
-[ Hyperliquid WebSocket L2 Feeds ] ---> [ Mark / Index Price Telemetry ]
-                                                    |
-                                                    v
-                                    +-------------------------------+
-                                    |     Margin Health Monitor     |
-                                    | Account Equity vs Maint Margin|
-                                    +---------------+---------------+
-                                                    |
-                                          (Health <= Threshold)
-                                                    |
-                                                    v
-                                    +-------------------------------+
-                                    |     Finite State Machine      |
-                                    | IDLE -> ARMED -> EXEC -> COOL |
-                                    +---------------+---------------+
-                                                    |
-                                            (Order Dispatch)
-                                                    |
-                                                    v
-                                    +-------------------------------+
-                                    |    Delegated Agent Wallet     |
-                                    |     reduceOnly: true (IOC)    |
-                                    +---------------+---------------+
-                                                    |
-                                                    v
-                                    [ Hyperliquid Matching Engine ]
+```mermaid
+flowchart TD
+    A[Hyperliquid WebSocket L2 Feeds]
+    B[Mark / Index Price Telemetry]
+    C[Margin Health Monitor<br/>Account Equity vs Maint Margin]
+    D[Finite State Machine<br/>IDLE → ARMED → EXEC → COOL]
+    E[Delegated Agent Wallet<br/>reduceOnly: true · IOC]
+    F[Hyperliquid Matching Engine]
+
+    A --> B
+    B --> C
+    C -->|Health ≤ Threshold| D
+    D -->|Order Dispatch| E
+    E --> F
+```
 
 ---
 
@@ -81,18 +70,20 @@ MarginGuard provides a client-authorized, non-custodial risk engine that brings 
 
 ## Repository Structure
 
+```text
 .
-|-- Mochatrade.md           # Official hackathon brief and platform overview
-|-- README.md               # MarginGuard system documentation
-|-- .gitignore              # Dependency and build configuration exclusions
-`-- web/                    # Unified Next.js application & risk worker
-    |-- src/
-    |   |-- app/            # Application routes and terminal layout
-    |   |-- components/     # Mochatrade trading terminal & MarginGuard UI
-    |   `-- engine/         # State machine, telemetry, and order execution
-    |-- public/             # Static platform assets
-    |-- package.json        # Dependencies and build scripts
-    `-- tsconfig.json       # TypeScript compiler configuration
+├── Mochatrade.md           # Official hackathon brief and platform overview
+├── README.md               # MarginGuard system documentation
+├── .gitignore              # Dependency and build configuration exclusions
+└── web/                    # Unified Next.js application & risk worker
+    ├── src/
+    │   ├── app/            # Application routes and terminal layout
+    │   ├── components/     # Mochatrade trading terminal & MarginGuard UI
+    │   └── engine/         # State machine, telemetry, and order execution
+    ├── public/             # Static platform assets
+    ├── package.json        # Dependencies and build scripts
+    └── tsconfig.json       # TypeScript compiler configuration
+```
 
 ---
 
@@ -118,4 +109,4 @@ npm install
 npm run dev
 
 Open http://localhost:3000 in your browser to interact with the Mochatrade trading terminal and the MarginGuard risk module.
-EOF
+
