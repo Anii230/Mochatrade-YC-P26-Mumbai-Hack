@@ -327,7 +327,23 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                   {log.newLiqPrice && (
                     <span>New Liq: <strong className="text-emerald-300">${log.newLiqPrice.toFixed(2)}</strong></span>
                   )}
-                  <span>Tx: <strong className="text-blue-400 font-mono">{log.txHash}</strong></span>
+                  <span className="flex items-center gap-1">
+                    <span>Tx:</span>
+                    <a
+                      href={log.explorerUrl || `https://testnet.hyperliquid.xyz/explorer/tx/${log.txHash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300 underline font-mono flex items-center gap-0.5 transition-colors"
+                    >
+                      <span>{log.txHash.length > 18 ? `${log.txHash.slice(0, 10)}...${log.txHash.slice(-6)}` : log.txHash}</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                    {log.mode === 'live-testnet' && (
+                      <span className="text-[9px] bg-emerald-950 text-emerald-300 px-1 py-0.2 rounded border border-emerald-500/50 font-bold ml-1">
+                        L1 Testnet Verified
+                      </span>
+                    )}
+                  </span>
                   <span>Gas: <strong className="text-zinc-300">{log.gasCost}</strong></span>
                 </div>
               </div>

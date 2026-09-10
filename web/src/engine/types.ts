@@ -45,6 +45,8 @@ export interface AuditLog {
   txHash: string;
   executionVenue: string;
   gasCost: string;
+  mode?: 'simulated' | 'live-testnet';
+  explorerUrl?: string;
 }
 
 export interface MarketTicker {

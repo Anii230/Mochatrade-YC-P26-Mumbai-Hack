@@ -154,11 +154,28 @@ export const AuditToast: React.FC<AuditToastProps> = ({ toast, onClose }) => {
 
             {toast.details.txHash && (
               <div className="flex items-center justify-between pt-1 border-t border-zinc-800 text-[10px]">
-                <span className="text-zinc-500">L1 Action Signature:</span>
-                <span className="text-blue-400 font-mono flex items-center gap-1">
-                  <span>{toast.details.txHash}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-zinc-500">L1 Action Signature:</span>
+                  {toast.details.mode === 'live-testnet' && (
+                    <span className="text-[9px] bg-emerald-950 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-500/50 font-bold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      L1 Testnet Verified
+                    </span>
+                  )}
+                </div>
+                <a
+                  href={toast.details.explorerUrl || `https://testnet.hyperliquid.xyz/explorer/tx/${toast.details.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 underline font-mono flex items-center gap-1 transition-colors"
+                >
+                  <span>
+                    {toast.details.txHash.length > 18
+                      ? `${toast.details.txHash.slice(0, 10)}...${toast.details.txHash.slice(-6)}`
+                      : toast.details.txHash}
+                  </span>
                   <ExternalLink className="w-2.5 h-2.5" />
-                </span>
+                </a>
               </div>
             )}
           </div>

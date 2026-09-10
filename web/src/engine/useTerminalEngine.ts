@@ -30,6 +30,8 @@ export interface NotificationToast {
     liqAfter?: number;
     trimmedAmount?: string;
     txHash?: string;
+    mode?: 'simulated' | 'live-testnet';
+    explorerUrl?: string;
   };
   timestamp: string;
 }
@@ -381,9 +383,10 @@ export function useTerminalEngine() {
           cooldownSeconds: 60,
         }));
 
-        const txHash = '0x9f4a' + Math.random().toString(16).substring(2, 8) + 'c7b2';
+        const initialTxHash = '0x9f4a37d2e0c7b2e1f48039cfa19082da17b35ef892c5d1e4';
+        const initialExplorerUrl = 'https://testnet.hyperliquid.xyz';
 
-        // Add audit log
+        // Add optimistic audit log
         const defenseLog: AuditLog = {
           id: `log-${Date.now()}`,
           timestamp: new Date().toLocaleTimeString('en-IN') + ' IST',
@@ -395,14 +398,16 @@ export function useTerminalEngine() {
           healthAfter: restoredHealth,
           notionalTrimmed: trimmedNotional,
           newLiqPrice: newLiqPrice,
-          txHash: txHash,
+          txHash: initialTxHash,
           executionVenue: 'Hyperliquid L1 (Scoped Session Key)',
           gasCost: '0.00 USDC (Zero Gas L1)',
+          mode: 'simulated',
+          explorerUrl: initialExplorerUrl,
         };
 
         setAuditLogs((l) => [defenseLog, ...l]);
 
-        // Trigger Notification Toast
+        // Trigger Notification Toast optimistically
         setActiveToast({
           id: `toast-${Date.now()}`,
           type: 'DEFENSE_SUCCESS',
@@ -415,11 +420,58 @@ export function useTerminalEngine() {
             liqBefore: INITIAL_LIQ,
             liqAfter: newLiqPrice,
             trimmedAmount: `-$${trimmedNotional.toLocaleString()} USD (₹${(trimmedNotional * USD_INR_RATE).toLocaleString()})`,
-            txHash: txHash,
+            txHash: initialTxHash,
+            mode: 'simulated',
+            explorerUrl: initialExplorerUrl,
           },
           timestamp: new Date().toLocaleTimeString('en-IN'),
         });
-      }, 650);
+
+        // Asynchronously dispatch to Hyperliquid Testnet API route
+        fetch('/api/simulate-trim', { method: 'POST' })
+          .then((res) => res.json())
+          .then((data: { success: boolean; mode?: 'simulated' | 'live-testnet'; txHash?: string; explorerUrl?: string }) => {
+            if (data && data.success && data.txHash) {
+              const finalHash = data.txHash;
+              const finalUrl = data.explorerUrl || `https://testnet.hyperliquid.xyz/explorer/tx/${finalHash}`;
+              const finalMode = data.mode || 'simulated';
+
+              setActiveToast((currentToast) => {
+                if (!currentToast || currentToast.type !== 'DEFENSE_SUCCESS') return currentToast;
+                return {
+                  ...currentToast,
+                  details: {
+                    ...currentToast.details!,
+                    txHash: finalHash,
+                    mode: finalMode,
+                    explorerUrl: finalUrl,
+                  },
+                };
+              });
+
+              setAuditLogs((logs) => {
+                if (logs.length === 0) return logs;
+                const copy = [...logs];
+                const targetIdx = copy.findIndex((l) => l.action === 'DEFENSE_TRIM_EXECUTED');
+                if (targetIdx !== -1) {
+                  copy[targetIdx] = {
+                    ...copy[targetIdx],
+                    txHash: finalHash,
+                    mode: finalMode,
+                    explorerUrl: finalUrl,
+                    executionVenue: finalMode === 'live-testnet'
+                      ? 'Hyperliquid L1 Testnet (EIP-712 Order Placed)'
+                      : copy[targetIdx].executionVenue,
+                  };
+                }
+                return copy;
+              });
+            }
+          })
+          .catch((err) => {
+            console.warn('Simulate trim API call failed gracefully:', err);
+          });
+      }, 550);
     } else {
       // Guard is OFF: Liquidation warning!
       const pnlUsd = (droppedMark - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY);
