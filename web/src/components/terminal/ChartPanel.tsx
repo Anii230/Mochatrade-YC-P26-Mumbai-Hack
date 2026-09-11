@@ -21,9 +21,19 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
   const [chartType, setChartType] = useState<'CANDLE' | 'LINE'>('CANDLE');
   const [showEMA, setShowEMA] = useState<boolean>(true);
   const [hoverData, setHoverData] = useState<{ candle: CandleData; x: number; y: number } | null>(null);
+  const [sizeTick, setSizeTick] = useState<number>(0);
 
   // Timeframes list
   const timeframes = ['1s', '1m', '5m', '15m', '1H', '1D'];
+
+  // Redraw canvas when the container is resized
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setSizeTick((n) => n + 1));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Redraw canvas on data or dimension changes
   useEffect(() => {
@@ -232,7 +242,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
     ctx.fillText(`$${markPrice.toFixed(2)}`, chartWidth + 5, currentY + 3);
     ctx.restore();
 
-  }, [candles, position.entryPrice, position.liqPrice, markPrice, chartType, showEMA]);
+  }, [candles, position.entryPrice, position.liqPrice, markPrice, chartType, showEMA, sizeTick]);
 
   // Handle canvas mousemove for crosshair
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -269,8 +279,8 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
   return (
     <div className="w-full flex flex-col bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden shadow-inner">
       {/* Chart Toolbar */}
-      <div className="h-10 px-3 bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-between text-xs select-none">
-        <div className="flex items-center gap-2">
+      <div className="h-auto min-h-10 px-3 py-1.5 bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-between gap-2 text-xs select-none flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap overflow-x-auto">
           {/* Timeframe selector */}
           <div className="flex items-center bg-zinc-950 rounded p-0.5 border border-zinc-800 text-[11px] font-mono">
             {timeframes.map((tf) => (
@@ -314,7 +324,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
         </div>
 
         {/* Legend overlays */}
-        <div className="hidden sm:flex items-center gap-4 text-[11px] font-mono">
+        <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-0.5 bg-amber-500 rounded-full" />
             <span className="text-zinc-400">Entry:</span>
@@ -339,7 +349,7 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
       </div>
 
       {/* Candlestick Canvas Viewport */}
-      <div ref={containerRef} className="relative w-full h-[360px] cursor-crosshair">
+      <div ref={containerRef} className="relative w-full h-[300px] sm:h-[360px] cursor-crosshair">
         <canvas
           ref={canvasRef}
           onMouseMove={handleMouseMove}

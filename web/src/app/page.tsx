@@ -49,7 +49,7 @@ export default function TerminalPage() {
       />
 
       {/* 2. Main Viewport (2-Column Layout) */}
-      <main className="flex-1 w-full max-w-[1920px] mx-auto p-3 lg:p-4 flex flex-col gap-4 pb-28">
+      <main className="flex-1 w-full max-w-[1920px] mx-auto p-2 sm:p-3 lg:p-4 flex flex-col gap-3 lg:gap-4 pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Left Panel: 65% width (col-span-12 lg:col-span-8) */}
           <section className="lg:col-span-8 flex flex-col gap-4">
@@ -79,6 +79,7 @@ export default function TerminalPage() {
               markPrice={ticker.markPrice}
               availableUsd={wallet.freeUsd}
               availableInr={wallet.freeInr}
+              baseSymbol={ticker.symbol.replace('-PERP', '')}
             />
 
             {/* MarginGuard Autonomous Risk Shield Card */}

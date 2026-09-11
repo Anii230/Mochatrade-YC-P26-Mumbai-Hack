@@ -28,7 +28,7 @@ export const PitchToolbar: React.FC<PitchToolbarProps> = ({
   return (
     <div className="w-full bg-zinc-950/95 backdrop-blur-md border border-zinc-800 rounded-xl p-3 shadow-2xl font-mono text-xs text-zinc-300 flex flex-col md:flex-row items-center justify-between gap-4">
       {/* Left: Interactive Demo Context */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 shrink-0">
         <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
           <Zap className="w-5 h-5 fill-emerald-400" />
         </div>
@@ -41,7 +41,7 @@ export const PitchToolbar: React.FC<PitchToolbarProps> = ({
               Live State Machine
             </span>
           </div>
-          <div className="text-[11px] text-zinc-400 font-sans">
+          <div className="text-[11px] text-zinc-400 font-sans hidden sm:block">
             Demonstrate how Mochatrade defends Indian retail traders from overnight US gap-down liquidations while they sleep.
           </div>
         </div>

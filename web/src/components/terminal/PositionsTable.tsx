@@ -193,11 +193,11 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                   <div className="font-bold text-white">
                     ${position.sizeUsd.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </div>
-                  <div className="text-[11px] text-zinc-400">
+                  <div className="text-[11px] text-zinc-400 hidden md:block">
                     ₹{position.sizeInr.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                   </div>
-                  <div className="text-[10px] text-zinc-500">
-                    {position.contracts.toFixed(4)} NVDA
+                  <div className="text-[10px] text-zinc-500 hidden md:block">
+                    {position.contracts.toFixed(4)} {position.market.replace('-PERP', '')}
                   </div>
                 </td>
 
@@ -211,7 +211,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                   <div className="font-bold text-zinc-100 flex items-center gap-1">
                     ${position.markPrice.toFixed(2)}
                   </div>
-                  <div className="text-[10px] text-zinc-500">
+                  <div className="text-[10px] text-zinc-500 hidden md:block">
                     Spread: $0.02
                   </div>
                 </td>
@@ -221,7 +221,7 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
                   <div className="font-bold text-rose-400 flex items-center gap-1">
                     <span>${position.liqPrice.toFixed(2)}</span>
                   </div>
-                  <div className="text-[10px] text-zinc-400">
+                  <div className="text-[10px] text-zinc-400 hidden md:block">
                     Buffer: ${(position.markPrice - position.liqPrice).toFixed(2)} (
                     {(((position.markPrice - position.liqPrice) / position.markPrice) * 100).toFixed(1)}%)
                   </div>

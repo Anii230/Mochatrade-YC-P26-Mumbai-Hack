@@ -134,7 +134,7 @@ export const RiskShieldCard: React.FC<RiskShieldCardProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-1">
           {thresholdOptions.map((opt) => (
             <button
               key={opt}
@@ -163,7 +163,7 @@ export const RiskShieldCard: React.FC<RiskShieldCardProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="grid grid-cols-4 gap-1">
           {sliceOptions.map((opt) => (
             <button
               key={opt}

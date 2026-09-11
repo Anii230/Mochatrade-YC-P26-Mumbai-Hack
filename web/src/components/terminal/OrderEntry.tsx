@@ -7,9 +7,10 @@ interface OrderEntryProps {
   markPrice: number;
   availableUsd: number;
   availableInr: number;
+  baseSymbol: string;
 }
 
-export const OrderEntry: React.FC<OrderEntryProps> = ({ markPrice, availableUsd, availableInr }) => {
+export const OrderEntry: React.FC<OrderEntryProps> = ({ markPrice, availableUsd, availableInr, baseSymbol }) => {
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'STOP'>('MARKET');
   const [leverage, setLeverage] = useState<number>(20);
@@ -35,7 +36,7 @@ export const OrderEntry: React.FC<OrderEntryProps> = ({ markPrice, availableUsd,
   };
 
   const handlePlaceOrder = () => {
-    setOrderPlacedMsg(`Simulated ${leverage}x ${side === 'BUY' ? 'Long' : 'Short'} order submitted to Hyperliquid L1!`);
+    setOrderPlacedMsg(`Simulated ${leverage}x ${side === 'BUY' ? 'Long' : 'Short'} ${baseSymbol} order submitted to Hyperliquid L1!`);
     setTimeout(() => setOrderPlacedMsg(null), 3000);
   };
 
@@ -143,7 +144,7 @@ export const OrderEntry: React.FC<OrderEntryProps> = ({ markPrice, availableUsd,
         {/* INR & Contracts conversion readout */}
         <div className="flex justify-between text-[10px] text-zinc-400 px-1 font-sans">
           <span>₹{(parsedMargin * 83).toLocaleString()} INR Margin</span>
-          <span>≈ {contracts.toFixed(3)} NVDA</span>
+          <span>≈ {contracts.toFixed(3)} {baseSymbol}</span>
         </div>
 
         {/* Percentage Snaps */}
@@ -191,7 +192,7 @@ export const OrderEntry: React.FC<OrderEntryProps> = ({ markPrice, availableUsd,
       >
         <Zap className="w-4 h-4 fill-current" />
         <span>
-          Open {leverage}x {side === 'BUY' ? 'Long' : 'Short'} NVDA
+          Open {leverage}x {side === 'BUY' ? 'Long' : 'Short'} {baseSymbol}
         </span>
       </button>
 
