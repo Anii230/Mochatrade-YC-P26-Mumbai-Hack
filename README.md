@@ -32,40 +32,40 @@ However, high leverage combined with cross-border market dynamics introduces sev
 ```mermaid
 flowchart TD
     subgraph MarketData["1. Market Feeds & Ingestion"]
-        HL[Hyperliquid L1 WebSocket / OrderBook] --> Feed[Real-Time Price & Mark Telemetry]
-        Feed --> Jitter[Brownian Micro-Ticking Engine]
+        HL["Hyperliquid L1 WebSocket / OrderBook"] --> Feed["Real-Time Price & Mark Telemetry"]
+        Feed --> Jitter["Brownian Micro-Ticking Engine"]
     end
 
     subgraph ClientTerminal["2. Mochatrade Trading Terminal (Next.js 16 + React 19)"]
-        Jitter --> LiveState[Live Market & Position State]
-        LiveState --> CanvasChart[Canvas Candlestick Chart with Overlays]
-        LiveState --> PosTable[Positions Table & Health Meter]
-        LiveState --> RiskCard[MarginGuard Control Card]
+        Jitter --> LiveState["Live Market & Position State"]
+        LiveState --> CanvasChart["Canvas Candlestick Chart with Overlays"]
+        LiveState --> PosTable["Positions Table & Health Meter"]
+        LiveState --> RiskCard["MarginGuard Control Card"]
     end
 
     subgraph RiskEngine["3. MarginGuard Autonomous Defense Engine"]
-        LiveState --> HealthCheck{Margin Health Ratio <= Threshold?}
-        HealthCheck -- "No (Health > 115%)" --> ArmedState[State: ARMED / Monitoring]
-        HealthCheck -- "Yes (Health <= 114%)" --> TriggerTrim[State: TRIMMING / Fire Defense]
+        LiveState --> HealthCheck{"Margin Health Ratio <= Threshold?"}
+        HealthCheck -->|"No (Health > 115%)"| ArmedState["State: ARMED (Monitoring)"]
+        HealthCheck -->|"Yes (Health <= 114%)"| TriggerTrim["State: TRIMMING (Fire Defense)"]
         
-        TriggerTrim --> SliceCalc[Calculate 25% reduceOnly Trim Slice]
-        SliceCalc --> Signer[Scoped Session Key / EIP-712 Signer]
+        TriggerTrim --> SliceCalc["Calculate 25% reduceOnly Trim Slice"]
+        SliceCalc --> Signer["Scoped Session Key (EIP-712 Signer)"]
     end
 
     subgraph ExecutionLayer["4. Non-Custodial Order Dispatch"]
-        Signer --> API[/api/simulate-trim Endpoint]
-        API -->|With Private Key| HLTestnet[Hyperliquid Testnet L1 Client]
-        API -->|Without Key| SimEngine[Deterministic L1 Simulator Engine]
+        Signer --> API["API: /api/simulate-trim Endpoint"]
+        API -->|"With Private Key"| HLTestnet["Hyperliquid Testnet L1 Client"]
+        API -->|"Without Key"| SimEngine["Deterministic L1 Simulator Engine"]
         
-        HLTestnet --> MatchingEngine[L1 Matching Engine: IOC Batch Order]
+        HLTestnet --> MatchingEngine["L1 Matching Engine: IOC Batch Order"]
         SimEngine --> MatchingEngine
     end
 
     subgraph RecoveryState["5. Post-Execution & Cooldown"]
-        MatchingEngine --> LogUpdate[Audit Log with Tx Hash & L1 Verification]
-        LogUpdate --> PosRebalance[Recalculate Notional, Buffer & Liquidation Price]
-        PosRebalance --> Toast[Audit Toast Notification]
-        PosRebalance --> Cooldown[State: COOLDOWN 60s]
+        MatchingEngine --> LogUpdate["Audit Log with Tx Hash & L1 Verification"]
+        LogUpdate --> PosRebalance["Recalculate Notional, Buffer & Liquidation Price"]
+        PosRebalance --> Toast["Audit Toast Notification"]
+        PosRebalance --> Cooldown["State: COOLDOWN 60s"]
         Cooldown --> ArmedState
     end
 
