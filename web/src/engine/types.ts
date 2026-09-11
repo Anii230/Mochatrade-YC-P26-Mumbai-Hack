@@ -34,7 +34,7 @@ export interface MarginGuardConfig {
 export interface AuditLog {
   id: string;
   timestamp: string;
-  action: 'DEFENSE_TRIM_EXECUTED' | 'RISK_THRESHOLD_BREACH' | 'ARMED' | 'DISARMED' | 'RESET_POSITION' | 'CONFIG_UPDATED';
+  action: 'DEFENSE_TRIM_EXECUTED' | 'RISK_THRESHOLD_BREACH' | 'ARMED' | 'DISARMED' | 'RESET_POSITION' | 'CONFIG_UPDATED' | 'MARKET_SWITCHED';
   title: string;
   details: string;
   markPrice: number;
@@ -83,4 +83,27 @@ export interface RecentTrade {
   price: number;
   size: number;
   side: 'BUY' | 'SELL';
+}
+
+/**
+ * A single entry in the US Stock Perps market catalogue.
+ * `seed` holds the demo position baseline used to bootstrap the terminal.
+ */
+export interface StockMarket {
+  symbol: string; // e.g. 'NVDA-PERP'
+  baseSymbol: string; // e.g. 'NVDA'
+  name: string; // e.g. 'NVIDIA Corp'
+  logoText: string; // e.g. 'NV'
+  seed: {
+    entry: number;
+    mark: number;
+    liq: number;
+    health: number; // margin health in percent
+  };
+  indexPrice: number;
+  change24h: number;
+  high24h: number;
+  low24h: number;
+  volume24hUsd: number;
+  fundingRate: number; // e.g. 0.0001 = 0.01%
 }

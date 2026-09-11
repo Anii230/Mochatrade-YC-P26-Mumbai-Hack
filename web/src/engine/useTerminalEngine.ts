@@ -8,14 +8,15 @@ import {
   MarketTicker,
   CandleData,
   OrderBookLevel,
-  RecentTrade
+  RecentTrade,
 } from './types';
-
-const INITIAL_ENTRY = 120.00;
-const INITIAL_MARK = 120.40;
-const INITIAL_LIQ = 114.20;
-const INITIAL_SIZE_USD = 10000;
-const USD_INR_RATE = 83.00;
+import {
+  STOCK_MARKETS,
+  getMarket,
+  buildMarketState,
+  USD_INR_RATE,
+  DEFAULT_SYMBOL,
+} from './markets';
 
 export interface NotificationToast {
   id: string;
@@ -38,41 +39,12 @@ export interface NotificationToast {
 
 export function useTerminalEngine() {
   // 1. Ticker state
-  const [ticker, setTicker] = useState<MarketTicker>({
-    symbol: 'NVDA-PERP',
-    name: 'NVIDIA Perpetual',
-    markPrice: INITIAL_MARK,
-    indexPrice: 120.38,
-    change24h: 3.20,
-    high24h: 123.40,
-    low24h: 116.20,
-    volume24hUsd: 482190450,
-    fundingRate: 0.0001, // 0.0100% / 1h
-    is24_7: true,
-  });
+  const [ticker, setTicker] = useState<MarketTicker>(() => buildMarketState(DEFAULT_SYMBOL).ticker);
 
   const [priceFlash, setPriceFlash] = useState<'UP' | 'DOWN' | null>(null);
 
   // 2. Position state
-  const [position, setPosition] = useState<Position>({
-    id: 'pos-nvda-01',
-    market: 'NVDA-PERP',
-    side: 'LONG',
-    leverage: 20,
-    sizeUsd: INITIAL_SIZE_USD,
-    sizeInr: INITIAL_SIZE_USD * USD_INR_RATE,
-    contracts: INITIAL_SIZE_USD / INITIAL_ENTRY, // 83.3333
-    entryPrice: INITIAL_ENTRY,
-    markPrice: INITIAL_MARK,
-    liqPrice: INITIAL_LIQ,
-    marginHealth: 135.2,
-    pnlUsd: (INITIAL_MARK - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY), // +$33.33
-    pnlInr: (INITIAL_MARK - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY) * USD_INR_RATE,
-    roePercent: ((INITIAL_MARK - INITIAL_ENTRY) / INITIAL_ENTRY) * 20 * 100, // +6.67%
-    initialMarginUsd: 500.00,
-    maintenanceMarginUsd: 250.00,
-    isolated: true,
-  });
+  const [position, setPosition] = useState<Position>(() => buildMarketState(DEFAULT_SYMBOL).position);
 
   // 3. MarginGuard configuration & state machine
   const [guardConfig, setGuardConfig] = useState<MarginGuardConfig>({
@@ -94,7 +66,7 @@ export function useTerminalEngine() {
       action: 'ARMED',
       title: 'MarginGuard L1 Defense Engine Armed',
       details: 'Autonomous protection active at 115% health threshold. Scoped key: 0x7c49...f89a (reduceOnly strict).',
-      markPrice: INITIAL_MARK,
+      markPrice: 120.40,
       healthBefore: 135.2,
       healthAfter: 135.2,
       txHash: '0x3a91...e42b',
@@ -110,50 +82,20 @@ export function useTerminalEngine() {
   const [isSimulatingLiveTicks, setIsSimulatingLiveTicks] = useState<boolean>(true);
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 7. Candlestick series state
-  const [candles, setCandles] = useState<CandleData[]>(() => {
-    // Generate 45 realistic historical 1m candles leading up to $120.40
-    const now = Date.now();
-    const data: CandleData[] = [];
-    let price = 117.80;
-    for (let i = 45; i >= 0; i--) {
-      const time = now - i * 60 * 1000;
-      const change = (Math.random() - 0.46) * 0.45;
-      const open = price;
-      const close = i === 0 ? INITIAL_MARK : Math.max(116.5, open + change);
-      const high = Math.max(open, close) + Math.random() * 0.35;
-      const low = Math.min(open, close) - Math.random() * 0.35;
-      const volume = Math.floor(2500 + Math.random() * 8000);
-      data.push({ time, open, high, low, close, volume });
-      price = close;
-    }
-    return data;
-  });
+  // 7. Selected market
+  const [selectedSymbol, setSelectedSymbol] = useState<string>(DEFAULT_SYMBOL);
 
-  // 8. Order book & recent trades
-  const [orderBook] = useState<{ asks: OrderBookLevel[]; bids: OrderBookLevel[] }>({
-    asks: [
-      { price: 120.45, size: 450, total: 450 },
-      { price: 120.44, size: 820, total: 1270 },
-      { price: 120.43, size: 1250, total: 2520 },
-      { price: 120.42, size: 680, total: 3200 },
-      { price: 120.41, size: 940, total: 4140 },
-    ],
-    bids: [
-      { price: 120.39, size: 1100, total: 1100 },
-      { price: 120.38, size: 750, total: 1850 },
-      { price: 120.37, size: 1540, total: 3390 },
-      { price: 120.36, size: 920, total: 4310 },
-      { price: 120.35, size: 1800, total: 6110 },
-    ],
-  });
+  // 8. Candlestick series state
+  const [candles, setCandles] = useState<CandleData[]>(() => buildMarketState(DEFAULT_SYMBOL).candles);
 
-  const [recentTrades] = useState<RecentTrade[]>([
-    { id: 'tr-1', time: '02:14:58', price: 120.40, size: 25.4, side: 'BUY' },
-    { id: 'tr-2', time: '02:14:55', price: 120.39, size: 12.0, side: 'SELL' },
-    { id: 'tr-3', time: '02:14:52', price: 120.40, size: 83.3, side: 'BUY' },
-    { id: 'tr-4', time: '02:14:48', price: 120.38, size: 45.1, side: 'SELL' },
-  ]);
+  // 9. Order book & recent trades
+  const [orderBook, setOrderBook] = useState<{ asks: OrderBookLevel[]; bids: OrderBookLevel[] }>(
+    () => buildMarketState(DEFAULT_SYMBOL).orderBook
+  );
+
+  const [recentTrades, setRecentTrades] = useState<RecentTrade[]>(
+    () => buildMarketState(DEFAULT_SYMBOL).recentTrades
+  );
 
   // Wallet balances
   const wallet = {
@@ -198,9 +140,9 @@ export function useTerminalEngine() {
     if (!isSimulatingLiveTicks || guardConfig.engineState === 'TRIMMING') return;
 
     const interval = setInterval(() => {
-      // Small jitter ±0.03
-      const delta = (Math.random() - 0.49) * 0.06;
       setTicker((prev) => {
+        // Price-scaled jitter: approx ±0.05% of mark price (~±$0.06 for NVDA)
+        const delta = (Math.random() - 0.49) * prev.markPrice * 0.0005;
         const nextPrice = Number((prev.markPrice + delta).toFixed(2));
         setPriceFlash(delta >= 0 ? 'UP' : 'DOWN');
         setTimeout(() => setPriceFlash(null), 400);
@@ -211,12 +153,10 @@ export function useTerminalEngine() {
           const pnlInr = pnlUsd * USD_INR_RATE;
           const roePercent = ((nextPrice - currentPos.entryPrice) / currentPos.entryPrice) * currentPos.leverage * 100;
 
-          // Maintenance margin distance calculation
-          let health = currentPos.marginHealth;
-          // Smoothly correlate health with price movement if not in trimmed state
+          // Maintenance margin distance calculation, generalized per market
           const priceDistFromLiq = nextPrice - currentPos.liqPrice;
-          const refDist = INITIAL_ENTRY - INITIAL_LIQ; // 5.80
-          health = Number((100 + (priceDistFromLiq / refDist) * 35).toFixed(1));
+          const refDist = currentPos.entryPrice - currentPos.liqPrice || 1;
+          const health = Number((100 + (priceDistFromLiq / refDist) * 35).toFixed(1));
 
           return {
             ...currentPos,
@@ -248,6 +188,7 @@ export function useTerminalEngine() {
         return {
           ...prev,
           markPrice: nextPrice,
+          indexPrice: Number((nextPrice - 0.02).toFixed(2)),
           high24h: Math.max(prev.high24h, nextPrice),
           low24h: Math.min(prev.low24h, nextPrice),
         };
@@ -256,6 +197,55 @@ export function useTerminalEngine() {
 
     return () => clearInterval(interval);
   }, [isSimulatingLiveTicks, guardConfig.engineState]);
+
+  // Action: Switch the active market across the whole terminal
+  const selectTicker = useCallback((symbol: string) => {
+    let market;
+    try {
+      market = getMarket(symbol);
+    } catch {
+      return;
+    }
+
+    const state = buildMarketState(market.symbol);
+
+    setSelectedSymbol(market.symbol);
+    setTicker(state.ticker);
+    setPosition(state.position);
+    setCandles(state.candles);
+    setOrderBook(state.orderBook);
+    setRecentTrades(state.recentTrades);
+    setPriceFlash(null);
+    setIsSimulatingLiveTicks(true);
+    setGuardConfig((prev) => ({
+      ...prev,
+      engineState: prev.isEnabled ? 'ARMED' : 'DISARMED',
+      cooldownSeconds: 0,
+    }));
+
+    const switchLog: AuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString('en-IN') + ' IST',
+      action: 'MARKET_SWITCHED',
+      title: `Switched to ${market.baseSymbol} Perpetual`,
+      details: `Active market switched to ${market.symbol}. Position rebased to $${market.seed.entry.toFixed(2)} entry ($10,000 notional, Liq: $${market.seed.liq.toFixed(2)}). Engine re-armed.`,
+      markPrice: state.ticker.markPrice,
+      healthBefore: state.position.marginHealth,
+      healthAfter: state.position.marginHealth,
+      txHash: '0x' + Math.random().toString(16).substring(2, 10),
+      executionVenue: 'Mochatrade Core Engine',
+      gasCost: '0.00 USDC',
+    };
+    setAuditLogs((logs) => [switchLog, ...logs]);
+
+    setActiveToast({
+      id: `toast-${Date.now()}`,
+      type: 'INFO',
+      title: `Market Switched: ${market.baseSymbol}`,
+      message: `Terminal rebased to ${market.symbol} @ $${state.ticker.markPrice.toFixed(2)}. MarginGuard re-armed at ${state.position.marginHealth.toFixed(1)}% health.`,
+      timestamp: new Date().toLocaleTimeString('en-IN'),
+    });
+  }, []);
 
   // Action: Toggle MarginGuard Enabled
   const toggleMarginGuard = useCallback(() => {
@@ -298,19 +288,23 @@ export function useTerminalEngine() {
     setGuardConfig((prev) => ({ ...prev, trimSlice: val }));
   }, []);
 
-  // PRIMARY DEMO ACTION: Simulate -4% Overnight Dip
+  // PRIMARY DEMO ACTION: Simulate -4% Overnight Dip (generalized to active market)
   const simulateOvernightDip = useCallback(() => {
     // 1. Temporarily pause live ticks to keep the demo state crisp
     setIsSimulatingLiveTicks(false);
 
-    const droppedMark = 115.10;
-    const droppedHealth = 114.0; // drops to 114% (< 115% threshold)
+    const market = getMarket(selectedSymbol);
+    const currentMark = ticker.markPrice;
+
+    const droppedMark = Number((currentMark * 0.956).toFixed(2)); // ~ -4.4% (115.10 for NVDA)
+    const droppedHealth = guardConfig.threshold - 1; // 114% at default 115% threshold
 
     // Update ticker
     setTicker((prev) => ({
       ...prev,
       markPrice: droppedMark,
-      change24h: -1.35,
+      indexPrice: Number((droppedMark - 0.02).toFixed(2)),
+      change24h: Number(prev.change24h - 4.5),
       low24h: Math.min(prev.low24h, droppedMark),
     }));
     setPriceFlash('DOWN');
@@ -321,9 +315,9 @@ export function useTerminalEngine() {
       const last = prevCandles[prevCandles.length - 1];
       const dipCandle: CandleData = {
         time: now + 60000,
-        open: last ? last.close : 120.40,
-        high: 120.40,
-        low: droppedMark - 0.30,
+        open: last ? last.close : currentMark,
+        high: currentMark,
+        low: droppedMark - droppedMark * 0.003,
         close: droppedMark,
         volume: 38400, // Spike in volume
       };
@@ -334,7 +328,7 @@ export function useTerminalEngine() {
     if (guardConfig.isEnabled) {
       // Step A: Immediately show breach state
       setPosition((prev) => {
-        const pnlUsd = (droppedMark - prev.entryPrice) * prev.contracts; // (115.10 - 120) * 83.333 = -$408.33
+        const pnlUsd = (droppedMark - prev.entryPrice) * prev.contracts;
         return {
           ...prev,
           markPrice: droppedMark,
@@ -349,17 +343,22 @@ export function useTerminalEngine() {
       setGuardConfig((prev) => ({ ...prev, engineState: 'TRIMMING' }));
 
       // Step B: Simulate autonomous L1 sub-second execution delay (600ms)
+      const entryPrice = position.entryPrice;
+      const currentLiq = position.liqPrice;
+      const currentSizeUsd = position.sizeUsd;
+      const currentContracts = position.contracts;
+
       setTimeout(() => {
         const slicePct = guardConfig.trimSlice; // e.g. 25%
-        const trimmedNotional = (INITIAL_SIZE_USD * slicePct) / 100; // $2,500
-        const newSizeUsd = INITIAL_SIZE_USD - trimmedNotional; // $7,500
-        const newContracts = newSizeUsd / INITIAL_ENTRY; // 62.5
-        const newLiqPrice = 108.40; // New lower liquidation level
-        const restoredHealth = 126.2; // Health restored safely above trigger
+        const trimmedNotional = (currentSizeUsd * slicePct) / 100;
+        const newSizeUsd = currentSizeUsd - trimmedNotional;
+        const newContracts = newSizeUsd / entryPrice;
+        const newLiqPrice = Number((droppedMark - (entryPrice - currentLiq) * 1.15).toFixed(2));
+        const restoredHealth = Number((droppedHealth + 12.2).toFixed(1));
 
-        const pnlUsd = (droppedMark - INITIAL_ENTRY) * newContracts;
+        const pnlUsd = (droppedMark - entryPrice) * newContracts;
         const pnlInr = pnlUsd * USD_INR_RATE;
-        const roePercent = ((droppedMark - INITIAL_ENTRY) / INITIAL_ENTRY) * 20 * 100;
+        const roePercent = ((droppedMark - entryPrice) / entryPrice) * 20 * 100;
 
         setPosition((prev) => ({
           ...prev,
@@ -372,8 +371,8 @@ export function useTerminalEngine() {
           pnlUsd: Number(pnlUsd.toFixed(2)),
           pnlInr: Number(pnlInr.toFixed(2)),
           roePercent: Number(roePercent.toFixed(2)),
-          initialMarginUsd: 375.00,
-          maintenanceMarginUsd: 187.50,
+          initialMarginUsd: Number((newSizeUsd * 0.05).toFixed(2)),
+          maintenanceMarginUsd: Number((newSizeUsd * 0.025).toFixed(2)),
         }));
 
         // Transition to COOLDOWN (60s)
@@ -392,7 +391,7 @@ export function useTerminalEngine() {
           timestamp: new Date().toLocaleTimeString('en-IN') + ' IST',
           action: 'DEFENSE_TRIM_EXECUTED',
           title: 'Autonomous Liquidation Defense Executed',
-          details: `Margin health breached ${guardConfig.threshold}% (fell to ${droppedHealth}% at $115.10). Auto-dispatched 25% reduceOnly trim (-$${trimmedNotional.toLocaleString()} notional). Liquidation price lowered from $114.20 → $${newLiqPrice.toFixed(2)}. Health restored to ${restoredHealth}%.`,
+          details: `${market.baseSymbol} margin health breached ${guardConfig.threshold}% (fell to ${droppedHealth}% at $${droppedMark.toFixed(2)}). Auto-dispatched ${slicePct}% reduceOnly trim (-$${trimmedNotional.toLocaleString()} notional). Liquidation price lowered from $${currentLiq.toFixed(2)} → $${newLiqPrice.toFixed(2)}. Health restored to ${restoredHealth}%.`,
           markPrice: droppedMark,
           healthBefore: droppedHealth,
           healthAfter: restoredHealth,
@@ -412,12 +411,12 @@ export function useTerminalEngine() {
           id: `toast-${Date.now()}`,
           type: 'DEFENSE_SUCCESS',
           title: 'Autonomous Liquidation Defense Triggered',
-          message: `NVDA mark dropped to $115.10. MarginGuard executed a 25% reduceOnly trim order to prevent liquidation.`,
+          message: `${market.baseSymbol} mark dropped to $${droppedMark.toFixed(2)}. MarginGuard executed a ${slicePct}% reduceOnly trim order to prevent liquidation.`,
           details: {
             markPrice: droppedMark,
             healthBefore: droppedHealth,
             healthAfter: restoredHealth,
-            liqBefore: INITIAL_LIQ,
+            liqBefore: currentLiq,
             liqAfter: newLiqPrice,
             trimmedAmount: `-$${trimmedNotional.toLocaleString()} USD (₹${(trimmedNotional * USD_INR_RATE).toLocaleString()})`,
             txHash: initialTxHash,
@@ -427,8 +426,18 @@ export function useTerminalEngine() {
           timestamp: new Date().toLocaleTimeString('en-IN'),
         });
 
+        const trimmedContracts = Number((currentContracts - newContracts).toFixed(2));
+
         // Asynchronously dispatch to Hyperliquid Testnet API route
-        fetch('/api/simulate-trim', { method: 'POST' })
+        fetch('/api/simulate-trim', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            symbol: market.symbol,
+            price: Number(droppedMark.toFixed(2)),
+            size: trimmedContracts,
+          }),
+        })
           .then((res) => res.json())
           .then((data: { success: boolean; mode?: 'simulated' | 'live-testnet'; txHash?: string; explorerUrl?: string }) => {
             if (data && data.success && data.txHash) {
@@ -474,60 +483,54 @@ export function useTerminalEngine() {
       }, 550);
     } else {
       // Guard is OFF: Liquidation warning!
-      const pnlUsd = (droppedMark - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY);
+      const pnlUsd = (droppedMark - position.entryPrice) * position.contracts;
       setPosition((prev) => ({
         ...prev,
         markPrice: droppedMark,
         marginHealth: droppedHealth,
         pnlUsd: Number(pnlUsd.toFixed(2)),
         pnlInr: Number((pnlUsd * USD_INR_RATE).toFixed(2)),
-        roePercent: Number((((droppedMark - INITIAL_ENTRY) / INITIAL_ENTRY) * 20 * 100).toFixed(2)),
+        roePercent: Number((((droppedMark - prev.entryPrice) / prev.entryPrice) * 20 * 100).toFixed(2)),
       }));
 
       setActiveToast({
         id: `toast-${Date.now()}`,
         type: 'MARGIN_WARNING',
         title: 'CRITICAL MARGIN WARNING: Liquidation Imminent',
-        message: `NVDA mark dipped to $115.10. Margin health is 114.0% with liquidation at $114.20. MarginGuard is DISARMED - no defense was executed!`,
+        message: `${market.baseSymbol} mark dipped to $${droppedMark.toFixed(2)}. Margin health is ${droppedHealth.toFixed(1)}% with liquidation at $${position.liqPrice.toFixed(2)}. MarginGuard is DISARMED - no defense was executed!`,
         details: {
           markPrice: droppedMark,
-          healthBefore: 135.2,
+          healthBefore: position.marginHealth,
           healthAfter: droppedHealth,
-          liqBefore: INITIAL_LIQ,
-          liqAfter: INITIAL_LIQ,
+          liqBefore: position.liqPrice,
+          liqAfter: position.liqPrice,
         },
         timestamp: new Date().toLocaleTimeString('en-IN'),
       });
     }
-  }, [guardConfig.isEnabled, guardConfig.threshold, guardConfig.trimSlice]);
+  }, [
+    guardConfig.isEnabled,
+    guardConfig.threshold,
+    guardConfig.trimSlice,
+    selectedSymbol,
+    ticker.markPrice,
+    position.entryPrice,
+    position.liqPrice,
+    position.sizeUsd,
+    position.contracts,
+    position.marginHealth,
+  ]);
 
   // Reset Position action
   const resetPosition = useCallback(() => {
-    setTicker((prev) => ({
-      ...prev,
-      markPrice: INITIAL_MARK,
-      change24h: 3.20,
-    }));
+    const state = buildMarketState(selectedSymbol);
+    const market = getMarket(selectedSymbol);
 
-    setPosition({
-      id: 'pos-nvda-01',
-      market: 'NVDA-PERP',
-      side: 'LONG',
-      leverage: 20,
-      sizeUsd: INITIAL_SIZE_USD,
-      sizeInr: INITIAL_SIZE_USD * USD_INR_RATE,
-      contracts: INITIAL_SIZE_USD / INITIAL_ENTRY,
-      entryPrice: INITIAL_ENTRY,
-      markPrice: INITIAL_MARK,
-      liqPrice: INITIAL_LIQ,
-      marginHealth: 135.2,
-      pnlUsd: (INITIAL_MARK - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY),
-      pnlInr: (INITIAL_MARK - INITIAL_ENTRY) * (INITIAL_SIZE_USD / INITIAL_ENTRY) * USD_INR_RATE,
-      roePercent: ((INITIAL_MARK - INITIAL_ENTRY) / INITIAL_ENTRY) * 20 * 100,
-      initialMarginUsd: 500.00,
-      maintenanceMarginUsd: 250.00,
-      isolated: true,
-    });
+    setTicker(state.ticker);
+    setPosition(state.position);
+    setCandles(state.candles);
+    setOrderBook(state.orderBook);
+    setRecentTrades(state.recentTrades);
 
     setGuardConfig((prev) => ({
       ...prev,
@@ -542,10 +545,10 @@ export function useTerminalEngine() {
       timestamp: new Date().toLocaleTimeString('en-IN') + ' IST',
       action: 'RESET_POSITION',
       title: 'Position & Engine Reset to Baseline',
-      details: 'Restored 20x Long NVDA-PERP at $120.00 entry ($10,000 notional, Liq: $114.20, Health: 135.2%). Engine ARMED.',
-      markPrice: INITIAL_MARK,
-      healthBefore: 114.0,
-      healthAfter: 135.2,
+      details: `Restored 20x Long ${market.symbol} at $${market.seed.entry.toFixed(2)} entry ($10,000 notional, Liq: $${market.seed.liq.toFixed(2)}, Health: ${market.seed.health}%). Engine ARMED.`,
+      markPrice: state.ticker.markPrice,
+      healthBefore: state.position.marginHealth,
+      healthAfter: state.position.marginHealth,
       txHash: '0x' + Math.random().toString(16).substring(2, 10),
       executionVenue: 'Mochatrade Core Engine',
       gasCost: '0.00 USDC',
@@ -557,10 +560,10 @@ export function useTerminalEngine() {
       id: `toast-${Date.now()}`,
       type: 'RESET',
       title: 'Position Restored to Baseline',
-      message: 'NVDA-PERP reset to $120.00 Entry, $10,000 Notional (20x Long). MarginGuard Armed.',
+      message: `${market.symbol} reset to $${market.seed.entry.toFixed(2)} Entry, $10,000 Notional (20x Long). MarginGuard Armed.`,
       timestamp: new Date().toLocaleTimeString('en-IN'),
     });
-  }, []);
+  }, [selectedSymbol]);
 
   const closeToast = useCallback(() => {
     setActiveToast(null);
@@ -577,6 +580,9 @@ export function useTerminalEngine() {
     orderBook,
     recentTrades,
     wallet,
+    stockMarkets: STOCK_MARKETS,
+    selectedSymbol,
+    selectTicker,
     isSimulatingLiveTicks,
     setIsSimulatingLiveTicks,
     toggleMarginGuard,
