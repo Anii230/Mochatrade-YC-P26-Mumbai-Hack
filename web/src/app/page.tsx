@@ -22,6 +22,9 @@ export default function TerminalPage() {
     orderBook,
     recentTrades,
     wallet,
+    stockMarkets,
+    selectedSymbol,
+    selectTicker,
     isSimulatingLiveTicks,
     setIsSimulatingLiveTicks,
     toggleMarginGuard,
@@ -40,6 +43,9 @@ export default function TerminalPage() {
         priceFlash={priceFlash}
         wallet={wallet}
         guardConfig={guardConfig}
+        stockMarkets={stockMarkets}
+        selectedSymbol={selectedSymbol}
+        onSelectTicker={selectTicker}
       />
 
       {/* 2. Main Viewport (2-Column Layout) */}

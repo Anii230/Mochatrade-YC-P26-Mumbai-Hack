@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MarketTicker, MarginGuardConfig } from '@/engine/types';
+import { MarketTicker, MarginGuardConfig, StockMarket } from '@/engine/types';
 import {
   ShieldCheck,
   ChevronDown,
@@ -25,18 +25,22 @@ interface NavbarProps {
     verifiedFiu: boolean;
   };
   guardConfig: MarginGuardConfig;
+  stockMarkets: StockMarket[];
+  selectedSymbol: string;
+  onSelectTicker: (symbol: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guardConfig }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  ticker,
+  priceFlash,
+  wallet,
+  guardConfig,
+  stockMarkets,
+  selectedSymbol,
+  onSelectTicker,
+}) => {
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showTickerMenu, setShowTickerMenu] = useState(false);
-
-  const availableTickers = [
-    { symbol: 'NVDA-PERP', name: 'Nvidia Corp', price: ticker.markPrice, change: ticker.change24h, active: true },
-    { symbol: 'TSLA-PERP', name: 'Tesla Motors', price: 218.60, change: -1.8, active: false },
-    { symbol: 'AAPL-PERP', name: 'Apple Inc', price: 224.15, change: +0.7, active: false },
-    { symbol: 'BTC-PERP', name: 'Bitcoin Perp', price: 64250.00, change: +2.1, active: false },
-  ];
 
   return (
     <header className="w-full bg-zinc-950 border-b border-zinc-850 select-none text-zinc-100 sticky top-0 z-40">
@@ -99,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
                   FIU-IND Registered
                 </span>
               </div>
-              <div className="text-[10px] text-zinc-400 font-mono -mt-0.5 flex items-center gap-2">
+              <div className="text-[10px] text-zinc-400 font-mono -mt-0.5 hidden xl:flex items-center gap-2">
                 <span>US Stock Perps for India</span>
                 <span className="text-zinc-600">•</span>
                 <span className="text-zinc-400">Instant UPI Settlement</span>
@@ -111,14 +115,14 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
           <div className="h-8 w-px bg-zinc-800 mx-1 hidden md:block" />
 
           {/* Active Ticker Selector */}
-          <div className="relative">
+          <div className="relative shrink-0">
             <button
               onClick={() => setShowTickerMenu(!showTickerMenu)}
-              className="flex items-center gap-3 px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 transition-colors text-left group"
+              className="flex items-center gap-3 px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 transition-colors text-left group whitespace-nowrap"
             >
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded bg-emerald-950/70 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xs">
-                  NV
+                  {ticker.symbol.replace('-PERP', '').slice(0, 2)}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 font-mono font-bold text-sm text-zinc-100">
@@ -126,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
                     <ChevronDown className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-200 transition-transform" />
                   </div>
                   <div className="text-[10px] text-zinc-400 font-sans">
-                    NVIDIA Corp 20x
+                    {ticker.name} 20x
                   </div>
                 </div>
               </div>
@@ -153,16 +157,19 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
 
             {/* Dropdown Menu */}
             {showTickerMenu && (
-              <div className="absolute left-0 mt-1 w-64 bg-zinc-900 border border-zinc-750 rounded-lg shadow-2xl py-1 z-50 font-mono">
+              <div className="absolute left-0 mt-1 w-72 max-h-[420px] overflow-y-auto bg-zinc-900 border border-zinc-750 rounded-lg shadow-2xl py-1 z-50 font-mono">
                 <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-zinc-400 border-b border-zinc-800 font-sans font-semibold">
                   Select US Equity Perpetual
                 </div>
-                {availableTickers.map((t) => (
+                {stockMarkets.map((t) => (
                   <div
                     key={t.symbol}
-                    onClick={() => setShowTickerMenu(false)}
+                    onClick={() => {
+                      onSelectTicker(t.symbol);
+                      setShowTickerMenu(false);
+                    }}
                     className={`px-3 py-2 flex items-center justify-between text-xs hover:bg-zinc-800/80 cursor-pointer ${
-                      t.active ? 'bg-zinc-800/40 text-emerald-400 font-semibold' : 'text-zinc-300'
+                      selectedSymbol === t.symbol ? 'bg-zinc-800/40 text-emerald-400 font-semibold' : 'text-zinc-300'
                     }`}
                   >
                     <div>
@@ -170,13 +177,13 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
                       <div className="text-[10px] text-zinc-400 font-sans">{t.name}</div>
                     </div>
                     <div className="text-right">
-                      <div>${t.price.toFixed(2)}</div>
+                      <div>${t.seed.mark.toFixed(2)}</div>
                       <div
                         className={`text-[10px] ${
-                          t.change >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                          t.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'
                         }`}
                       >
-                        {t.change >= 0 ? `+${t.change}%` : `${t.change}%`}
+                        {t.change24h >= 0 ? `+${t.change24h}%` : `${t.change24h}%`}
                       </div>
                     </div>
                   </div>
@@ -186,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
           </div>
 
           {/* Ticker Key Stats */}
-          <div className="hidden lg:flex items-center gap-4 text-[11px] font-mono pl-2 text-zinc-400">
+          <div className="hidden xl:flex items-center gap-4 text-[11px] font-mono pl-2 text-zinc-400">
             <div>
               <span className="text-zinc-500 block text-[9px] uppercase">24h High</span>
               <span className="text-zinc-200">${ticker.high24h.toFixed(2)}</span>
@@ -195,13 +202,13 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
               <span className="text-zinc-500 block text-[9px] uppercase">24h Low</span>
               <span className="text-zinc-200">${ticker.low24h.toFixed(2)}</span>
             </div>
-            <div>
+            <div className="hidden 2xl:block">
               <span className="text-zinc-500 block text-[9px] uppercase">24h Vol</span>
               <span className="text-zinc-200 font-sans">
                 ${(ticker.volume24hUsd / 1_000_000).toFixed(1)}M
               </span>
             </div>
-            <div>
+            <div className="hidden 2xl:block">
               <span className="text-zinc-500 block text-[9px] uppercase">Open Interest</span>
               <span className="text-zinc-200">$42.8M</span>
             </div>
@@ -213,17 +220,17 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
           {/* Simulated Wallet Card */}
           <div
             onClick={() => setShowWalletModal(!showWalletModal)}
-            className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-all shadow-sm group"
+            className="flex items-center gap-2.5 px-2 sm:px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 cursor-pointer transition-all shadow-sm group"
           >
             <div className="w-7 h-7 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Wallet className="w-4 h-4" />
             </div>
             <div className="font-mono text-right">
               <div className="text-[10px] text-zinc-400 flex items-center justify-end gap-1.5 font-sans">
-                <span>Total Collateral:</span>
+                <span className="hidden md:inline">Total Collateral:</span>
                 <span className="text-emerald-400 font-bold font-mono">₹{wallet.totalInr.toLocaleString()} INR</span>
               </div>
-              <div className="text-xs font-bold text-zinc-100 flex items-center justify-end gap-1">
+              <div className="hidden sm:block text-xs font-bold text-zinc-100 flex items-center justify-end gap-1">
                 <span>~${wallet.totalUsd.toFixed(2)} USDC</span>
                 <span className="text-[10px] text-zinc-400 font-sans font-normal">(1 USD = ₹83)</span>
               </div>
