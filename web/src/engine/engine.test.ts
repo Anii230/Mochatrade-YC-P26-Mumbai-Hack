@@ -8,6 +8,7 @@ import {
   generateOrderBook,
   USD_INR_RATE,
   DEFAULT_SYMBOL,
+  computeMarginHealth,
 } from './markets';
 
 // Test state machine and invariant calculations
@@ -49,13 +50,14 @@ function testMarginGuardEngine() {
   const trimmedNotional = (INITIAL_SIZE_USD * TRIM_SLICE_PCT) / 100;
   const newSizeUsd = INITIAL_SIZE_USD - trimmedNotional;
   const newContracts = newSizeUsd / INITIAL_ENTRY;
-  const newLiqPrice = 108.40;
+  // Mirrors the engine's generalized formula exactly: droppedMark - (entry - liq) * 1.15
+  const newLiqPrice = Number((DROPPED_MARK - (INITIAL_ENTRY - INITIAL_LIQ) * 1.15).toFixed(2));
   const restoredHealth = 126.2;
 
   assert.strictEqual(trimmedNotional, 2500, 'Trimmed notional should be $2,500');
   assert.strictEqual(newSizeUsd, 7500, 'New position size should be $7,500');
   assert.strictEqual(Math.round(newContracts * 1000) / 1000, 62.5, 'New contracts should be 62.5');
-  assert.strictEqual(newLiqPrice, 108.40, 'New liquidation price should be $108.40');
+  assert.strictEqual(newLiqPrice, 108.43, 'New liquidation price should be $108.43');
   assert.strictEqual(restoredHealth, 126.2, 'Restored margin health should be 126.2%');
 
   console.log('\n✓ Autonomous Defense Execution verified:');
@@ -65,7 +67,7 @@ function testMarginGuardEngine() {
   console.log(`  Margin Health successfully restored from ${DROPPED_HEALTH}% → ${restoredHealth}% (SAFE)`);
 
   // 4. Reset Position
-  console.log('\n✓ Position Reset verified back to baseline ($120.00, $10,000, Liq $114.20, Health 135.2%).');
+  console.log('\n✓ Position Reset verified back to baseline ($120.00, $10,000, Liq $114.20, Health 137.4%).');
 
   // 5. Market Catalogue Integrity
   assert.strictEqual(STOCK_MARKETS.length, 10, 'Catalogue must contain exactly 10 stocks');
@@ -95,6 +97,16 @@ function testMarginGuardEngine() {
     assert(pos.sizeUsd === 10000, `${market.symbol} notional must be $10,000`);
     assert(pos.contracts > 0, `${market.symbol} contracts must be positive`);
     assert(pos.markPrice > 0 && pos.entryPrice > 0, `${market.symbol} prices must be positive`);
+    assert.strictEqual(
+      pos.marginHealth,
+      market.seed.health,
+      `${market.symbol} position health must match its seed (kept in sync with the live formula)`
+    );
+    assert.strictEqual(
+      computeMarginHealth(market.seed.entry, market.seed.mark, market.seed.liq),
+      market.seed.health,
+      `${market.symbol} seed health must equal the live-tick formula output`
+    );
   }
 
   console.log('\n✓ All 10 catalogue markets produce valid baselines (mark > liq, $10k notional).');

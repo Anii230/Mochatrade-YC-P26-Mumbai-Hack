@@ -38,13 +38,16 @@ export interface NotificationToast {
 }
 
 export function useTerminalEngine() {
+  // Single canonical baseline snapshot (deterministic) reused across all initial state
+  const initialState = buildMarketState(DEFAULT_SYMBOL);
+
   // 1. Ticker state
-  const [ticker, setTicker] = useState<MarketTicker>(() => buildMarketState(DEFAULT_SYMBOL).ticker);
+  const [ticker, setTicker] = useState<MarketTicker>(() => initialState.ticker);
 
   const [priceFlash, setPriceFlash] = useState<'UP' | 'DOWN' | null>(null);
 
   // 2. Position state
-  const [position, setPosition] = useState<Position>(() => buildMarketState(DEFAULT_SYMBOL).position);
+  const [position, setPosition] = useState<Position>(() => initialState.position);
 
   // 3. MarginGuard configuration & state machine
   const [guardConfig, setGuardConfig] = useState<MarginGuardConfig>({
@@ -67,8 +70,8 @@ export function useTerminalEngine() {
       title: 'MarginGuard L1 Defense Engine Armed',
       details: 'Autonomous protection active at 115% health threshold. Scoped key: 0x7c49...f89a (reduceOnly strict).',
       markPrice: 120.40,
-      healthBefore: 135.2,
-      healthAfter: 135.2,
+      healthBefore: initialState.position.marginHealth,
+      healthAfter: initialState.position.marginHealth,
       txHash: '0x3a91...e42b',
       executionVenue: 'Hyperliquid L1',
       gasCost: '0.00 USDC',
@@ -86,15 +89,15 @@ export function useTerminalEngine() {
   const [selectedSymbol, setSelectedSymbol] = useState<string>(DEFAULT_SYMBOL);
 
   // 8. Candlestick series state
-  const [candles, setCandles] = useState<CandleData[]>(() => buildMarketState(DEFAULT_SYMBOL).candles);
+  const [candles, setCandles] = useState<CandleData[]>(() => initialState.candles);
 
   // 9. Order book & recent trades
   const [orderBook, setOrderBook] = useState<{ asks: OrderBookLevel[]; bids: OrderBookLevel[] }>(
-    () => buildMarketState(DEFAULT_SYMBOL).orderBook
+    () => initialState.orderBook
   );
 
   const [recentTrades, setRecentTrades] = useState<RecentTrade[]>(
-    () => buildMarketState(DEFAULT_SYMBOL).recentTrades
+    () => initialState.recentTrades
   );
 
   // Wallet balances

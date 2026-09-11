@@ -111,7 +111,7 @@ Mochatrade-YC-P26-Mumbai-Hack/
 
 #### [`useTerminalEngine.ts`](file:///home/ani23/Projects/mochatrade/Mochatrade-YC-P26-Mumbai-Hack/web/src/engine/useTerminalEngine.ts) (590 lines)
 - ✅ **Ticker state** — NVDA-PERP initial at $120.40, with 24h stats
-- ✅ **Position state** — 20x Long NVDA, $10,000 notional, $120 entry, $114.20 liq, 135.2% health
+- ✅ **Position state** — 20x Long NVDA, $10,000 notional, $120 entry, $114.20 liq, 137.4% health
 - ✅ **MarginGuard config** — Default armed at 115% threshold, 25% trim slice
 - ✅ **Audit log history** — Initial "ARMED" log entry
 - ✅ **Notification toast system** — `NotificationToast` interface with defense/warning/reset/info types

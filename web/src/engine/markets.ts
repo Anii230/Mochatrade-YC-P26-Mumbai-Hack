@@ -22,7 +22,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'NVDA',
     name: 'NVIDIA Corp',
     logoText: 'NV',
-    seed: { entry: 120.00, mark: 120.40, liq: 114.20, health: 135.2 },
+    seed: { entry: 120.00, mark: 120.40, liq: 114.20, health: 137.4 },
     indexPrice: 120.38,
     change24h: 3.20,
     high24h: 123.40,
@@ -35,7 +35,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'TSLA',
     name: 'Tesla Motors',
     logoText: 'TS',
-    seed: { entry: 218.00, mark: 218.60, liq: 207.60, health: 134.5 },
+    seed: { entry: 218.00, mark: 218.60, liq: 207.60, health: 137.0 },
     indexPrice: 218.55,
     change24h: -1.8,
     high24h: 224.10,
@@ -48,7 +48,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'AAPL',
     name: 'Apple Inc',
     logoText: 'AP',
-    seed: { entry: 224.00, mark: 224.15, liq: 213.10, health: 133.8 },
+    seed: { entry: 224.00, mark: 224.15, liq: 213.10, health: 135.5 },
     indexPrice: 224.12,
     change24h: 0.7,
     high24h: 225.80,
@@ -61,7 +61,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'AMZN',
     name: 'Amazon.com Inc',
     logoText: 'AM',
-    seed: { entry: 187.00, mark: 187.35, liq: 178.10, health: 134.2 },
+    seed: { entry: 187.00, mark: 187.35, liq: 178.10, health: 136.4 },
     indexPrice: 187.32,
     change24h: 1.2,
     high24h: 190.10,
@@ -74,7 +74,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'MSFT',
     name: 'Microsoft Corp',
     logoText: 'MS',
-    seed: { entry: 402.00, mark: 402.50, liq: 382.60, health: 134.0 },
+    seed: { entry: 402.00, mark: 402.50, liq: 382.60, health: 135.9 },
     indexPrice: 402.45,
     change24h: 0.5,
     high24h: 406.20,
@@ -87,7 +87,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'META',
     name: 'Meta Platforms',
     logoText: 'ME',
-    seed: { entry: 512.00, mark: 512.80, liq: 487.40, health: 134.6 },
+    seed: { entry: 512.00, mark: 512.80, liq: 487.40, health: 136.1 },
     indexPrice: 512.75,
     change24h: 2.3,
     high24h: 518.40,
@@ -100,7 +100,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'GOOGL',
     name: 'Alphabet Inc',
     logoText: 'GO',
-    seed: { entry: 176.00, mark: 176.45, liq: 167.70, health: 134.1 },
+    seed: { entry: 176.00, mark: 176.45, liq: 167.70, health: 136.9 },
     indexPrice: 176.42,
     change24h: 0.9,
     high24h: 178.30,
@@ -113,7 +113,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'COIN',
     name: 'Coinbase Global',
     logoText: 'CO',
-    seed: { entry: 245.00, mark: 246.20, liq: 233.90, health: 134.8 },
+    seed: { entry: 245.00, mark: 246.20, liq: 233.90, health: 138.8 },
     indexPrice: 246.14,
     change24h: -2.4,
     high24h: 254.30,
@@ -126,7 +126,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'AMD',
     name: 'Advanced Micro Devices',
     logoText: 'AD',
-    seed: { entry: 148.00, mark: 148.30, liq: 140.90, health: 134.3 },
+    seed: { entry: 148.00, mark: 148.30, liq: 140.90, health: 136.5 },
     indexPrice: 148.27,
     change24h: 1.6,
     high24h: 150.80,
@@ -139,7 +139,7 @@ export const STOCK_MARKETS: StockMarket[] = [
     baseSymbol: 'SPY',
     name: 'S&P 500 ETF',
     logoText: 'SP',
-    seed: { entry: 532.00, mark: 532.40, liq: 506.10, health: 134.4 },
+    seed: { entry: 532.00, mark: 532.40, liq: 506.10, health: 135.5 },
     indexPrice: 532.35,
     change24h: 0.4,
     high24h: 536.10,
@@ -255,10 +255,20 @@ export function generateRecentTrades(symbol: string, price: number, count = 4): 
   return trades;
 }
 
+/**
+ * Margin health percentage, computed exactly like the engine's live-tick formula
+ * (see `useTerminalEngine.ts`): max(105, 100 + ((mark - liq) / (entry - liq || 1)) * 35),
+ * rounded to 1 decimal BEFORE the clamp so seeds never drift from the first tick.
+ */
+export function computeMarginHealth(entry: number, mark: number, liq: number): number {
+  const refDist = entry - liq || 1;
+  return Math.max(105, Number((100 + ((mark - liq) / refDist) * 35).toFixed(1)));
+}
+
 export function buildPosition(market: StockMarket, overrides: Partial<Position> = {}): Position {
   const leverage = 20;
   const sizeUsd = 10000;
-  const { entry, mark, liq, health } = market.seed;
+  const { entry, mark, liq } = market.seed;
   const contracts = sizeUsd / entry;
   const pnlUsd = (mark - entry) * contracts;
   return {
@@ -272,7 +282,7 @@ export function buildPosition(market: StockMarket, overrides: Partial<Position> 
     entryPrice: entry,
     markPrice: mark,
     liqPrice: liq,
-    marginHealth: health,
+    marginHealth: computeMarginHealth(entry, mark, liq),
     pnlUsd: Number(pnlUsd.toFixed(2)),
     pnlInr: Number((pnlUsd * USD_INR_RATE).toFixed(2)),
     roePercent: Number((((mark - entry) / entry) * leverage * 100).toFixed(2)),

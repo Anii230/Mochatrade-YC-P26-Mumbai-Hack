@@ -11,7 +11,7 @@ export interface Position {
   entryPrice: number;
   markPrice: number;
   liqPrice: number;
-  marginHealth: number; // in percent, e.g. 135.2
+  marginHealth: number; // in percent, e.g. 137.4
   pnlUsd: number;
   pnlInr: number;
   roePercent: number;
