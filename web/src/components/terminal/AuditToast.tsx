@@ -4,12 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { NotificationToast } from '@/engine/useTerminalEngine';
 import {
   ShieldCheck,
-  ShieldAlert,
   RotateCcw,
   X,
   ExternalLink,
   ArrowRight,
-  Zap,
   CheckCircle2,
   AlertOctagon
 } from 'lucide-react';
@@ -25,7 +23,6 @@ export const AuditToast: React.FC<AuditToastProps> = ({ toast, onClose }) => {
   useEffect(() => {
     if (!toast) return;
 
-    setProgress(100);
     const duration = 12000;
     const startTime = Date.now();
 

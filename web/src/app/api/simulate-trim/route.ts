@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ExchangeClient, HttpTransport, TESTNET_API_URL } from '@nktkas/hyperliquid';
+import { ExchangeClient, HttpTransport } from '@nktkas/hyperliquid';
 import { privateKeyToAccount } from 'viem/accounts';
 
 export const dynamic = 'force-dynamic';

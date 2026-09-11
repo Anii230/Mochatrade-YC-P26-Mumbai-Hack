@@ -6,14 +6,9 @@ import {
   ShieldCheck,
   ChevronDown,
   Wallet,
-  Activity,
   Zap,
   ArrowUpRight,
-  ArrowDownRight,
-  Info,
-  Layers,
-  KeyRound,
-  ExternalLink
+  KeyRound
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -226,10 +221,10 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
             <div className="font-mono text-right">
               <div className="text-[10px] text-zinc-400 flex items-center justify-end gap-1.5 font-sans">
                 <span>Total Collateral:</span>
-                <span className="text-emerald-400 font-bold font-mono">₹50,000 INR</span>
+                <span className="text-emerald-400 font-bold font-mono">₹{wallet.totalInr.toLocaleString()} INR</span>
               </div>
               <div className="text-xs font-bold text-zinc-100 flex items-center justify-end gap-1">
-                <span>~$600.00 USDC</span>
+                <span>~${wallet.totalUsd.toFixed(2)} USDC</span>
                 <span className="text-[10px] text-zinc-400 font-sans font-normal">(1 USD = ₹83)</span>
               </div>
             </div>
@@ -290,19 +285,19 @@ export const Navbar: React.FC<NavbarProps> = ({ ticker, priceFlash, wallet, guar
           <div className="py-3 space-y-2 text-xs font-mono">
             <div className="flex justify-between">
               <span className="text-zinc-400">Total Account Value:</span>
-              <span className="font-bold text-white">₹50,000 (~$600.00)</span>
+              <span className="font-bold text-white">₹{wallet.totalInr.toLocaleString()} (~${wallet.totalUsd.toFixed(2)})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-400">Free Margin (Available):</span>
-              <span className="text-emerald-400 font-semibold">₹8,500 (~$100.00)</span>
+              <span className="text-emerald-400 font-semibold">₹{wallet.freeInr.toLocaleString()} (~${wallet.freeUsd.toFixed(2)})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-400">Used Position Margin:</span>
-              <span className="text-zinc-300 font-semibold">₹41,500 (~$500.00)</span>
+              <span className="text-zinc-300 font-semibold">₹{wallet.usedInr.toLocaleString()} (~${wallet.usedUsd.toFixed(2)})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-400">Linked UPI ID:</span>
-              <span className="text-zinc-300 text-[11px] font-sans">ani@okhdfcbank</span>
+              <span className="text-zinc-300 text-[11px] font-sans">{wallet.upiId}</span>
             </div>
           </div>
 

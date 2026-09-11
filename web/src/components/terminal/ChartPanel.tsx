@@ -1,15 +1,10 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { CandleData, Position } from '@/engine/types';
 import {
   BarChart2,
-  TrendingUp,
-  Maximize2,
-  Sliders,
-  Eye,
-  Activity,
-  Layers
+  Activity
 } from 'lucide-react';
 
 interface ChartPanelProps {
@@ -61,8 +56,8 @@ export const ChartPanel: React.FC<ChartPanelProps> = ({ candles, position, markP
     if (candles.length === 0) return;
 
     // Determine min/max price range (include position entry and liq price)
-    let minPrice = Math.min(...candles.map((c) => c.low), position.liqPrice - 1);
-    let maxPrice = Math.max(...candles.map((c) => c.high), position.entryPrice + 1);
+    const minPrice = Math.min(...candles.map((c) => c.low), position.liqPrice - 1);
+    const maxPrice = Math.max(...candles.map((c) => c.high), position.entryPrice + 1);
     const priceRange = maxPrice - minPrice || 1;
 
     // Price to Y coordinate conversion

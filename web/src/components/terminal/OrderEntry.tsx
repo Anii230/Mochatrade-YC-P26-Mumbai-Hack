@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShieldCheck, ArrowRight, Zap, Info } from 'lucide-react';
+import { ShieldCheck, Zap } from 'lucide-react';
 
 interface OrderEntryProps {
   markPrice: number;

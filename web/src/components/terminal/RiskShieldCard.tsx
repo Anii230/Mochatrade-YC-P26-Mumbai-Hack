@@ -4,17 +4,9 @@ import React from 'react';
 import { MarginGuardConfig, Position } from '@/engine/types';
 import {
   Shield,
-  ShieldCheck,
-  ShieldAlert,
-  Sliders,
-  Zap,
   Lock,
   Clock,
-  RefreshCw,
-  AlertCircle,
-  HelpCircle,
-  KeyRound,
-  CheckCircle2
+  RefreshCw
 } from 'lucide-react';
 
 interface RiskShieldCardProps {

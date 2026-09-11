@@ -4,12 +4,8 @@ import React from 'react';
 import {
   Zap,
   RotateCcw,
-  Shield,
-  Activity,
-  AlertTriangle,
   Play,
   Pause,
-  ArrowDownRight,
   TrendingDown
 } from 'lucide-react';
 import { MarginEngineState } from '@/engine/types';
@@ -18,7 +14,6 @@ interface PitchToolbarProps {
   onSimulateDip: () => void;
   onReset: () => void;
   engineState: MarginEngineState;
-  isArmed: boolean;
   isSimulatingLiveTicks: boolean;
   onToggleLiveTicks: () => void;
 }
@@ -27,7 +22,6 @@ export const PitchToolbar: React.FC<PitchToolbarProps> = ({
   onSimulateDip,
   onReset,
   engineState,
-  isArmed,
   isSimulatingLiveTicks,
   onToggleLiveTicks,
 }) => {

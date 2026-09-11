@@ -131,7 +131,7 @@ export function useTerminalEngine() {
   });
 
   // 8. Order book & recent trades
-  const [orderBook, setOrderBook] = useState<{ asks: OrderBookLevel[]; bids: OrderBookLevel[] }>({
+  const [orderBook] = useState<{ asks: OrderBookLevel[]; bids: OrderBookLevel[] }>({
     asks: [
       { price: 120.45, size: 450, total: 450 },
       { price: 120.44, size: 820, total: 1270 },
@@ -148,7 +148,7 @@ export function useTerminalEngine() {
     ],
   });
 
-  const [recentTrades, setRecentTrades] = useState<RecentTrade[]>([
+  const [recentTrades] = useState<RecentTrade[]>([
     { id: 'tr-1', time: '02:14:58', price: 120.40, size: 25.4, side: 'BUY' },
     { id: 'tr-2', time: '02:14:55', price: 120.39, size: 12.0, side: 'SELL' },
     { id: 'tr-3', time: '02:14:52', price: 120.40, size: 83.3, side: 'BUY' },

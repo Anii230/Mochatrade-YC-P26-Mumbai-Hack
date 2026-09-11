@@ -60,7 +60,6 @@ export default function TerminalPage() {
               auditLogs={auditLogs}
               orderBook={orderBook}
               recentTrades={recentTrades}
-              onTriggerSimulate={simulateOvernightDip}
             />
           </section>
 
@@ -91,14 +90,13 @@ export default function TerminalPage() {
           onSimulateDip={simulateOvernightDip}
           onReset={resetPosition}
           engineState={guardConfig.engineState}
-          isArmed={guardConfig.isEnabled}
           isSimulatingLiveTicks={isSimulatingLiveTicks}
           onToggleLiveTicks={() => setIsSimulatingLiveTicks(!isSimulatingLiveTicks)}
         />
       </div>
 
       {/* 4. Telemetry Audit Toast */}
-      <AuditToast toast={activeToast} onClose={closeToast} />
+      <AuditToast key={activeToast?.id ?? 'none'} toast={activeToast} onClose={closeToast} />
     </div>
   );
 }

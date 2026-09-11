@@ -3,19 +3,12 @@
 import React, { useState } from 'react';
 import { Position, AuditLog, OrderBookLevel, RecentTrade } from '@/engine/types';
 import {
-  ShieldAlert,
   ShieldCheck,
-  TrendingUp,
-  TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
   ExternalLink,
   History,
-  BookOpen,
-  Activity,
-  Layers,
-  Sparkles,
-  AlertTriangle
+  BookOpen
 } from 'lucide-react';
 
 interface PositionsTableProps {
@@ -23,7 +16,6 @@ interface PositionsTableProps {
   auditLogs: AuditLog[];
   orderBook: { asks: OrderBookLevel[]; bids: OrderBookLevel[] };
   recentTrades: RecentTrade[];
-  onTriggerSimulate?: () => void;
 }
 
 export const PositionsTable: React.FC<PositionsTableProps> = ({
@@ -31,7 +23,6 @@ export const PositionsTable: React.FC<PositionsTableProps> = ({
   auditLogs,
   orderBook,
   recentTrades,
-  onTriggerSimulate,
 }) => {
   const [activeTab, setActiveTab] = useState<'POSITIONS' | 'AUDIT_LOGS' | 'ORDER_BOOK'>('POSITIONS');
 
