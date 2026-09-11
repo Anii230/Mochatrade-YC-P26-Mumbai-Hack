@@ -66,6 +66,9 @@ export default function TerminalPage() {
               auditLogs={auditLogs}
               orderBook={orderBook}
               recentTrades={recentTrades}
+              stockMarkets={stockMarkets}
+              selectedSymbol={selectedSymbol}
+              onSelectTicker={selectTicker}
             />
           </section>
 
