@@ -356,7 +356,7 @@ export function useTerminalEngine() {
         const trimmedNotional = (currentSizeUsd * slicePct) / 100;
         const newSizeUsd = currentSizeUsd - trimmedNotional;
         const newContracts = newSizeUsd / entryPrice;
-        const newLiqPrice = Number((droppedMark - (entryPrice - currentLiq) * 1.15).toFixed(2));
+        const newLiqPrice = Math.max(0, Number((droppedMark - (entryPrice - currentLiq) * 1.15).toFixed(2)));
         const restoredHealth = Number((droppedHealth + 12.2).toFixed(1));
 
         const pnlUsd = (droppedMark - entryPrice) * newContracts;
