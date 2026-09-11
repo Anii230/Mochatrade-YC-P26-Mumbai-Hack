@@ -7,7 +7,22 @@ export const dynamic = 'force-dynamic';
 const DEFAULT_SIMULATED_HASH = '0x9f4a37d2e0c7b2e1f48039cfa19082da17b35ef892c5d1e4';
 const TESTNET_EXPLORER = 'https://testnet.hyperliquid.xyz';
 
-export async function POST() {
+export async function POST(request: Request) {
+  let symbol = 'NVDA-PERP';
+  let price = '115.10';
+  let size = '21.7';
+
+  try {
+    const body = await request.json();
+    if (body && typeof body === 'object') {
+      if (typeof body.symbol === 'string') symbol = body.symbol;
+      if (typeof body.price === 'number' || typeof body.price === 'string') price = String(body.price);
+      if (typeof body.size === 'number' || typeof body.size === 'string') size = String(body.size);
+    }
+  } catch {
+    // No/invalid body — fall back to the NVDA demo defaults below.
+  }
+
   const privateKey = process.env.HYPERLIQUID_TESTNET_PRIVATE_KEY;
 
   // Fail-soft if private key is not configured
@@ -15,6 +30,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       mode: 'simulated',
+      symbol,
       txHash: DEFAULT_SIMULATED_HASH,
       explorerUrl: TESTNET_EXPLORER,
     });
@@ -35,8 +51,8 @@ export async function POST() {
         {
           a: 0, // Asset 0 (Perp)
           b: false, // IsBuy: false (Sell / trim long)
-          p: '115.10',
-          s: '21.7',
+          p: price,
+          s: size,
           r: true, // reduceOnly: true
           t: { limit: { tif: 'Ioc' } },
         },
@@ -58,6 +74,7 @@ export async function POST() {
         return NextResponse.json({
           success: true,
           mode: 'simulated',
+          symbol,
           txHash: DEFAULT_SIMULATED_HASH,
           explorerUrl: TESTNET_EXPLORER,
           note: firstStatus.error,
@@ -68,6 +85,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       mode: 'live-testnet',
+      symbol,
       txHash: resultTxHash,
       explorerUrl: `https://testnet.hyperliquid.xyz/explorer/tx/${resultTxHash}`,
     });
@@ -77,6 +95,7 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       mode: 'simulated',
+      symbol,
       txHash: DEFAULT_SIMULATED_HASH,
       explorerUrl: TESTNET_EXPLORER,
     });
